@@ -23,7 +23,6 @@ const AppointmentList = ({ standalone = false }) => {
       setAppointments(response.data || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
-      // Only show error toast if it's a server/network error, not for empty data
       if (error.response && error.response.status !== 404) {
         setError('Failed to load appointment data. Please try again.');
       }
@@ -52,11 +51,9 @@ const AppointmentList = ({ standalone = false }) => {
       setUpdatingStatus(appointmentId);
       console.log(`Updating appointment ${appointmentId} status to ${newStatus}`);
       
-      // Make the API call with the correct data structure
       const response = await PatientAPI.updateAppointmentStatus(appointmentId, { status: newStatus });
       console.log('Status update response:', response);
       
-      // Update the local state with the new status
       setAppointments(appointments.map(appointment => 
         appointment._id === appointmentId 
           ? { ...appointment, status: newStatus } 
@@ -83,10 +80,6 @@ const AppointmentList = ({ standalone = false }) => {
     } finally {
       setUpdatingStatus(null);
     }
-  };
-
-  const handleEdit = (id) => {
-    navigate(`/dashboard/patient/appointment/edit/${id}`);
   };
 
   const getStatusBadgeClass = (status) => {

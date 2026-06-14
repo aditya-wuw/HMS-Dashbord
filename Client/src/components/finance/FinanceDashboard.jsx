@@ -13,7 +13,6 @@ import { useAppContext } from '../../context/AppContext';
 
 import 'jspdf-autotable';
 
-// Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
@@ -55,7 +54,6 @@ const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
       setBills(billsRes.data || []);
       setClaims(claimsRes.data || []);
       
-      // Calculate statistics
       const totalRevenue = billsRes.data.reduce((sum, bill) => sum + parseFloat(bill.paidAmount || 0), 0);
       const pendingPayments = billsRes.data.reduce((sum, bill) => {
         return sum + (parseFloat(bill.totalAmount || 0) - parseFloat(bill.paidAmount || 0));
@@ -74,13 +72,11 @@ const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
         overduePayments
       });
       
-      // Update chart data
       const paidCount = billsRes.data.filter(bill => bill.paymentStatus === 'Paid').length;
       const partialCount = billsRes.data.filter(bill => bill.paymentStatus === 'Partial').length;
       const pendingCount = billsRes.data.filter(bill => bill.paymentStatus === 'Pending').length;
       const overdueCount = billsRes.data.filter(bill => bill.paymentStatus === 'Overdue').length;
       
-      // Process revenue stats data for the chart
       let revenueTrendsData = { ...chartData.revenueTrends }; // Default data
       
       if (revenueStatsRes && revenueStatsRes.data) {
@@ -104,7 +100,6 @@ const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
         revenueTrends: revenueTrendsData
       }));
       
-      // Show toast notification when data is refreshed, but only if not the initial load
       if (!loading) {
         toast.info('Finance dashboard data refreshed', { 
           autoClose: 2000, 
@@ -120,12 +115,10 @@ const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
     }
   };
   
-  // Initial data load
   useEffect(() => {
     fetchData();
   }, []);
   
-  // Refresh data when refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchData();
@@ -145,7 +138,6 @@ const FinanceDashboard = ({ activeTab: initialActiveTab = 'billing' }) => {
       },
     },
   };
-
 
   return (
     <DashboardLayout dashboardType="admin">

@@ -7,22 +7,22 @@ import { PatientAPI, FinanceAPI } from '../../services/api';
 
 const BillForm = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // Get bill ID from URL if in edit mode
+  const { id } = useParams();
   const isEditMode = !!id;
-  
+
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [loadingBill, setLoadingBill] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
-  
+
   const getDefaultDueDate = () => {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
     return dueDate.toISOString().split('T')[0];
   };
- 
+
   const [formData, setFormData] = useState({
     patientId: '',
     billType: 'Consultation',
@@ -35,17 +35,16 @@ const BillForm = () => {
     ]
   });
 
-  // Load patients
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         setLoadingPatients(true);
         setError(null);
         const response = await PatientAPI.getAllPatients();
-        setPatients(response.data || []);
+        setPatients(response.data);
+
       } catch (error) {
         console.error('Error fetching patients:', error);
-        // Only show error toast if it's a server/network error, not for empty data
         if (error.response && error.response.status !== 404) {
           toast.error('Error loading patients');
           setError('Failed to load patient data. Please try again later.');
@@ -54,25 +53,23 @@ const BillForm = () => {
         setLoadingPatients(false);
       }
     };
-    
+
     fetchPatients();
   }, []);
-  
-  // Load bill data if in edit mode
+
   useEffect(() => {
     if (isEditMode) {
       const fetchBill = async () => {
         try {
           setLoadingBill(true);
           setError(null);
-          
+
           console.log(`Fetching bill with ID: ${id}`);
           const response = await FinanceAPI.getBillById(id);
           const billData = response.data;
-          
+
           console.log('Received bill data:', billData);
-          
-          // Map server data to form fields
+
           setFormData({
             patientId: billData.patient?._id || '',
             billType: billData.billType || 'Consultation',
@@ -85,7 +82,7 @@ const BillForm = () => {
               amount: item.amount?.toString() || '0'
             })) : [{ description: '', amount: '' }]
           });
-          
+
         } catch (error) {
           console.error('Error fetching bill:', error);
           toast.error('Failed to load bill data');
@@ -94,32 +91,27 @@ const BillForm = () => {
           setLoadingBill(false);
         }
       };
-      
+
       fetchBill();
     }
   }, [isEditMode, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Update form data
+
     setFormData(prevData => ({
       ...prevData,
       [name]: value
     }));
-    
-    // Special handling for patientId to ensure validation is cleared
+
     if (name === 'patientId') {
       console.log('Patient selected:', value);
-      
+
       if (value) {
-        // Immediately clear the patientId error if a selection is made
         setFormErrors(prevErrors => ({
           ...prevErrors,
           patientId: ''
         }));
-        
-        // Verify the patient exists in the list (double-check)
         const patientExists = patients.some(patient => patient._id === value);
         if (!patientExists) {
           console.warn('Selected patient not found in patients list:', value);
@@ -129,14 +121,12 @@ const BillForm = () => {
           }));
         }
       } else {
-        // Set error for empty selection
         setFormErrors(prevErrors => ({
           ...prevErrors,
           patientId: 'Please select a patient'
         }));
       }
     } else if (formErrors[name]) {
-      // Clear error for other fields when user starts typing
       setFormErrors(prevErrors => ({
         ...prevErrors,
         [name]: ''
@@ -150,26 +140,24 @@ const BillForm = () => {
       ...updatedItems[index],
       [field]: value
     };
-    
+
     setFormData({
       ...formData,
       items: updatedItems
     });
-    
-    // Calculate total amount
+
     if (field === 'amount') {
       const totalAmount = updatedItems.reduce((sum, item) => {
         return sum + (parseFloat(item.amount) || 0);
       }, 0);
-      
+
       setFormData(prev => ({
         ...prev,
         items: updatedItems,
         totalAmount: totalAmount.toFixed(2)
       }));
     }
-    
-    // Clear errors for items
+
     if (formErrors.items) {
       setFormErrors({
         ...formErrors,
@@ -189,75 +177,68 @@ const BillForm = () => {
     if (formData.items.length === 1) {
       return; // Keep at least one item
     }
-    
+
     const updatedItems = formData.items.filter((_, i) => i !== index);
-    
-    // Recalculate total
+
     const totalAmount = updatedItems.reduce((sum, item) => {
       return sum + (parseFloat(item.amount) || 0);
     }, 0);
-    
+
     setFormData({
       ...formData,
       items: updatedItems,
       totalAmount: totalAmount.toFixed(2)
     });
   };
-  
+
   const validateForm = () => {
     const errors = {};
-    
-    // Enhanced patient validation
+
     if (!formData.patientId || formData.patientId.trim() === '') {
       errors.patientId = 'Please select a patient';
     } else {
-      // Verify the selected patient exists in our list
       const patientExists = patients.some(patient => patient._id === formData.patientId);
       if (!patientExists) {
         errors.patientId = 'Invalid patient selection';
       }
     }
-    
+
     if (!formData.dueDate) {
       errors.dueDate = 'Due date is required';
     }
-    
-    const itemsValid = formData.items.every(item => 
-      item.description.trim() !== '' && 
-      item.amount !== '' && 
+
+    const itemsValid = formData.items.every(item =>
+      item.description.trim() !== '' &&
+      item.amount !== '' &&
       parseFloat(item.amount) > 0
     );
-    
+
     if (!itemsValid) {
       errors.items = 'All items must have a description and valid amount';
     }
-    
+
     if (parseFloat(formData.paidAmount) > parseFloat(formData.totalAmount)) {
       errors.paidAmount = 'Paid amount cannot be greater than total amount';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Final validation before submission
+
     if (!validateForm()) {
       toast.error('Please correct the errors in the form');
-      
-      // Specifically check for patient errors and highlight
+
       if (formErrors.patientId) {
         toast.error(formErrors.patientId);
-        // Focus on the patient select element if possible
         document.querySelector('select[name="patientId"]')?.focus();
       }
-      
+
       return;
     }
-    
-    // Ensure patientId is valid one last time
+
     if (!patients.some(patient => patient._id === formData.patientId)) {
       setFormErrors(prev => ({
         ...prev,
@@ -266,15 +247,14 @@ const BillForm = () => {
       toast.error('Patient selection is invalid');
       return;
     }
-    
+
     try {
       setLoading(true);
-      
-      // Determine payment status
+
       let paymentStatus = formData.paymentStatus;
       const paidAmount = parseFloat(formData.paidAmount) || 0;
       const totalAmount = parseFloat(formData.totalAmount);
-      
+
       if (paidAmount === 0) {
         paymentStatus = 'Pending';
       } else if (paidAmount === totalAmount) {
@@ -282,20 +262,14 @@ const BillForm = () => {
       } else if (paidAmount > 0 && paidAmount < totalAmount) {
         paymentStatus = 'Partial';
       }
-      
-      // Create the data object to send to the server
-      // Map patientId to patient to match server expectations
+
       const billData = {
         ...formData,
-        patient: formData.patientId, // Map the field correctly for server validation
         paymentStatus
       };
-      
-      // Delete patientId since we've mapped it to patient
-      delete billData.patientId;
-      
+
       console.log(`${isEditMode ? 'Updating' : 'Submitting'} bill data:`, billData);
-      
+
       if (isEditMode) {
         await FinanceAPI.updateBill(id, billData);
         toast.success('Bill updated successfully!');
@@ -303,7 +277,7 @@ const BillForm = () => {
         await FinanceAPI.createBill(billData);
         toast.success('Bill created successfully!');
       }
-      
+
       navigate('/dashboard/admin/billing');
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} bill:`, error);
@@ -324,7 +298,7 @@ const BillForm = () => {
           <FaFileInvoiceDollar className="text-purple-500 mr-3 text-xl" />
           <h1 className="text-2xl font-bold text-gray-800">{isEditMode ? 'Update Bill' : 'Create New Bill'}</h1>
         </div>
-        
+
         {(loadingPatients || loadingBill) ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -333,8 +307,8 @@ const BillForm = () => {
           <div className="flex justify-center items-center h-64">
             <div className="text-red-500 text-center">
               <p>{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 cursor-pointer"
               >
                 Retry
@@ -347,7 +321,7 @@ const BillForm = () => {
               {/* Basic Information */}
               <div>
                 <h2 className="text-lg font-semibold mb-4 text-gray-700">Bill Information</h2>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Patient*
@@ -372,7 +346,7 @@ const BillForm = () => {
                   </select>
                   {formErrors.patientId && <p className="mt-1 text-red-500 text-xs">{formErrors.patientId}</p>}
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Bill Type*
@@ -393,11 +367,11 @@ const BillForm = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Payment Information */}
               <div>
                 <h2 className="text-lg font-semibold mb-4 text-gray-700">Payment Information</h2>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Total Amount (₹)*
@@ -417,7 +391,7 @@ const BillForm = () => {
                     Calculated from items below
                   </p>
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Paid Amount (₹)
@@ -433,7 +407,7 @@ const BillForm = () => {
                   />
                   {formErrors.paidAmount && <p className="mt-1 text-red-500 text-xs">{formErrors.paidAmount}</p>}
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Due Date*
@@ -450,7 +424,7 @@ const BillForm = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Bill Items */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
@@ -463,9 +437,9 @@ const BillForm = () => {
                   + Add Item
                 </button>
               </div>
-              
+
               {formErrors.items && <p className="mt-1 mb-3 text-red-500 text-xs">{formErrors.items}</p>}
-              
+
               {formData.items.map((item, index) => (
                 <div key={`item-${index}`} className="flex items-center space-x-4 mb-3 p-3 border border-gray-200 rounded-md">
                   <div className="flex-grow">
@@ -505,7 +479,7 @@ const BillForm = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 type="button"

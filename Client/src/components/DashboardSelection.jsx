@@ -1,10 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserInjured, FaUserMd, FaUserCog } from 'react-icons/fa';
 import { useAppContext } from '../context/AppContext';
 
 const DashboardSelection = () => {
   const navigate = useNavigate();
-  const { handleRoleSelect } = useAppContext();
+  const { handleRoleSelect, handleLogout } = useAppContext();
 
   const dashboardOptions = [
     {
@@ -39,21 +39,13 @@ const DashboardSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <nav className='flex justify-between items-center bg-blue-500/20 p-[10px] rounded-md mb-[10px]'>
-        <div></div>
-        <div className='flex items-center gap-2'>
-        <p>logged in as Admin</p>
-        <div className='bg-blue-500 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer'>A</div>
-
-        </div>
-      </nav>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 mt-20">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-extrabold text-gray-900">Hospital Management System</h1>
           <p className="mt-3 text-xl text-gray-500">Select a dashboard to continue</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {dashboardOptions.map((option) => (
             <button
@@ -68,6 +60,23 @@ const DashboardSelection = () => {
               <p className="text-gray-600">{option.description}</p>
             </button>
           ))}
+        </div>
+        <div className='flex justify-center mt-6'>
+          <div className="pt-4 border-t border-slate-100 flex items-center gap-6">
+            <Link to="/" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-800 transition-colors">
+              ← Back to Home
+            </Link>
+            <span className="text-slate-300">|</span>
+            <button 
+              onClick={() => {
+                handleLogout();
+                navigate('/');
+              }}
+              className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800 transition-colors cursor-pointer"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
     </div>

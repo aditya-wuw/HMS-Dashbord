@@ -20,13 +20,11 @@ const AppointmentCalendar = ({ appointments = [] }) => {
     setDateAppointments(appointmentsOnDate);
   }, [selectedDate, appointments]);
   
-  // Check if a date has appointments
   const hasAppointments = (date) => {
     const dateStr = formatDateString(date);
     return appointments.some(appointment => formatDateString(appointment.date) === dateStr);
   };
   
-  // Get status color for the appointment dot
   const getStatusColor = (status) => {
     switch (status) {
       case 'Scheduled': return 'bg-blue-500';
@@ -38,7 +36,6 @@ const AppointmentCalendar = ({ appointments = [] }) => {
     }
   };
   
-  // Custom tile content to show dots for dates with appointments
   const tileContent = ({ date, view }) => {
     if (view !== 'month') return null;
     
@@ -68,7 +65,6 @@ const AppointmentCalendar = ({ appointments = [] }) => {
     );
   };
   
-  // Custom class for dates with appointments
   const tileClassName = ({ date, view }) => {
     if (view !== 'month') return '';
     
@@ -77,23 +73,22 @@ const AppointmentCalendar = ({ appointments = [] }) => {
   
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold mb-4 text-blue-800 flex items-center">
-            <FaCalendarAlt className="mr-2" /> Appointment Calendar
-          </h3>
-          <div className="calendar-container">
-            <Calendar 
-              onChange={setSelectedDate}
-              value={selectedDate}
-              tileContent={tileContent}
-              tileClassName={tileClassName}
-              className="w-full border-none"
-            />
-          </div>
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-lg font-semibold mb-4 text-blue-800 flex items-center">
+          <FaCalendarAlt className="mr-2" /> Appointment Calendar
+        </h3>
+        <div className="calendar-container">
+          <Calendar 
+            onChange={setSelectedDate}
+            value={selectedDate}
+            tileContent={tileContent}
+            tileClassName={tileClassName}
+            className="w-full border-none"
+          />
         </div>
-        <div className="flex-1 md:min-w-210">
-        <div className="bg-white rounded-lg shadow p-4 ">
+      </div>
+      <div className="flex-1 md:min-w-210">
+        <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-lg font-semibold mb-2 text-blue-800">
             Appointments for {format(selectedDate, 'MMMM d, yyyy')}
           </h3>
@@ -142,9 +137,6 @@ const AppointmentCalendar = ({ appointments = [] }) => {
           )}
         </div>
       </div>
-      </div>
-      
-     
     </div>
   );
 };

@@ -25,7 +25,6 @@ const BillingList = ({ standalone = false }) => {
         setBills(response.data || []);
       } catch (error) {
         console.error('Error fetching bills:', error);
-        // Only show error toast if it's a server/network error, not for empty data
         if (error.response && error.response.status !== 404) {
           toast.error('Error loading billing data');
           setError('Failed to load billing data. Please try again later.');
@@ -49,7 +48,6 @@ const BillingList = ({ standalone = false }) => {
     return matchesSearch && matchesStatus && matchesType;
   }) : [];
   
-  // Get unique bill types for filter options
   const uniqueTypes = bills && bills.length ? Array.from(new Set(bills.map(bill => bill.billType).filter(Boolean))) : [];
   
   const getStatusBadgeClass = (status) => {
@@ -67,10 +65,6 @@ const BillingList = ({ standalone = false }) => {
     }
   };
   
-  const handleViewBill = (id) => {
-    navigate(`/dashboard/admin/bills/${id}`);
-  };
-  
   const handleEditBill = (id) => {
     console.log(`Navigating to edit bill with ID: ${id}`);
     navigate(`/dashboard/admin/bills/${id}/edit`);
@@ -81,28 +75,22 @@ const BillingList = ({ standalone = false }) => {
     
     try {
     
-      
-      // Create a new jsPDF instance
       const doc = new jsPDF();
       const hospitalName = 'Hospital Management System';
       const invoiceTitle = 'INVOICE';
       const date = new Date().toLocaleDateString();
       
-      // Add hospital name and logo
       doc.setFontSize(20);
       doc.setTextColor(0, 51, 102);
       doc.text(hospitalName, 105, 15, { align: 'center' });
       
-      // Add invoice title
       doc.setFontSize(24);
       doc.setTextColor(0, 0, 0);
       doc.text(invoiceTitle, 105, 30, { align: 'center' });
       
-      // Add invoice details
       doc.setFontSize(11);
       doc.setTextColor(0, 0, 0);
       
-      // Left side - Hospital details
       doc.text('Rekha Hospital', 14, 50);
       doc.text('123 Medical Center Road', 14, 55);
       doc.text('Healthcare City, HC 12345', 14, 60);
@@ -114,7 +102,6 @@ const BillingList = ({ standalone = false }) => {
       doc.text(`Bill Date: ${new Date(bill.billDate).toLocaleDateString()}`, 140, 60);
       doc.text(`Status: ${bill.paymentStatus || 'Pending'}`, 140, 65);
       
-      // Patient information
       doc.setFillColor(240, 240, 240);
       doc.rect(14, 80, 182, 25, 'F');
       doc.setFontSize(12);
@@ -125,17 +112,14 @@ const BillingList = ({ standalone = false }) => {
       doc.text(`Patient: ${bill.patientName || 'Unknown'}`, 14, 95);
       doc.text(`Patient ID: ${bill.patientId || 'Unknown'}`, 14, 100);
       
-      // Bill details
       doc.setFontSize(14);
       doc.setTextColor(0, 51, 102);
       doc.text('Bill Details', 14, 115);
       
-      // Prepare bill items
       const billItems = [
         [bill.purpose || 'Medical Service', '1', `₹${parseFloat(bill.totalAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]
       ];
       
-      // Add detailed items if available
       if (bill.items && Array.isArray(bill.items)) {
         billItems.length = 0; // Clear the generic entry
         bill.items.forEach(item => {
@@ -147,7 +131,6 @@ const BillingList = ({ standalone = false }) => {
         });
       }
       
-      // Use autoTable as a function with doc as first argument instead of as a method
       autoTable(doc, {
         startY: 120,
         head: [['Description', 'Quantity', 'Amount']],
@@ -162,10 +145,8 @@ const BillingList = ({ standalone = false }) => {
         }
       });
       
-      // Add payment summary
       const finalY = doc.lastAutoTable.finalY || 150;
       
-      // Add total amount
       doc.setFillColor(240, 240, 240);
       doc.rect(120, finalY + 10, 76, 50, 'F');
       
@@ -184,7 +165,6 @@ const BillingList = ({ standalone = false }) => {
       doc.text('Balance Due:', 125, finalY + 40);
       doc.text(`₹${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, finalY + 40, { align: 'right' });
       
-      // Payment instructions
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(11);
       doc.text('Payment Instructions:', 14, finalY + 70);
@@ -192,12 +172,10 @@ const BillingList = ({ standalone = false }) => {
       doc.text('2. Payment can be made by cash, check, or online transfer.', 14, finalY + 85);
       doc.text('3. For questions regarding this invoice, contact our billing department.', 14, finalY + 90);
       
-      // Thank you note
       doc.setTextColor(0, 51, 102);
       doc.setFontSize(12);
       doc.text('Thank you for choosing Rekha Hospital', 105, finalY + 105, { align: 'center' });
 
-      // Add footer
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -207,7 +185,6 @@ const BillingList = ({ standalone = false }) => {
         doc.text('© Hospital Management System', 105, doc.internal.pageSize.height - 5, { align: 'center' });
       }
       
-      // Save the PDF
       doc.save(`Invoice_${bill._id?.substring(0, 8) || '00000000'}.pdf`);
       toast.success('Invoice downloaded successfully!');
     } catch (error) {
@@ -220,11 +197,9 @@ const BillingList = ({ standalone = false }) => {
     try {
       console.log('Recording payment for bill:', bill._id);
       
-      // Calculate remaining balance
       const remainingBalance = bill.totalAmount - bill.paidAmount;
       console.log('Remaining balance:', remainingBalance);
       
-      // Usually this would navigate to a payment form or show a modal
       const payment = window.prompt(`Enter payment amount for ${bill.patient?.name}'s bill (up to ₹${remainingBalance.toFixed(2)}):`, '0');
       
       if (payment === null) {
@@ -250,7 +225,6 @@ const BillingList = ({ standalone = false }) => {
       console.log('Sending payment data to API...');
       await FinanceAPI.recordPayment(bill._id, { amount: paymentAmount });
       
-      // Update the bill in state
       const newPaidAmount = parseFloat(bill.paidAmount) + paymentAmount;
       const newStatus = newPaidAmount >= bill.totalAmount ? 'Paid' : 'Partial';
       
@@ -281,7 +255,6 @@ const BillingList = ({ standalone = false }) => {
         const response = await FinanceAPI.deleteBill(id);
         console.log('Delete response:', response);
         
-        // Update the UI by removing the deleted bill
         setBills(bills.filter(bill => bill._id !== id));
         toast.success('Bill deleted successfully');
       } catch (error) {

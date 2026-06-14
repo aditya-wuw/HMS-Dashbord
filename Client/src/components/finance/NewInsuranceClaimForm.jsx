@@ -38,7 +38,6 @@ const InsuranceClaimForm = () => {
     'Medicaid', 'Anthem', 'MetLife', 'Other'
   ];
 
-  // Load patients
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -56,7 +55,6 @@ const InsuranceClaimForm = () => {
     fetchPatients();
   }, []);
   
-  // Load insurance claim data if in edit mode
   useEffect(() => {
     if (isEditMode) {
       const fetchClaim = async () => {
@@ -68,13 +66,11 @@ const InsuranceClaimForm = () => {
           
           console.log('Received insurance claim data:', claimData);
           
-          // Set the patient ID first to trigger bill loading
           setFormData(prevData => ({
             ...prevData,
             patientId: claimData.patient?._id || ''
           }));
           
-          // Then set the rest of the form data
           setTimeout(() => {
             setFormData({
               patientId: claimData.patient?._id || '',
@@ -104,7 +100,6 @@ const InsuranceClaimForm = () => {
     }
   }, [isEditMode, id]);
   
-  // Fetch bills when patient is selected
   useEffect(() => {
     const fetchBills = async () => {
       if (!formData.patientId) {
@@ -140,7 +135,6 @@ const InsuranceClaimForm = () => {
       [name]: value
     });
     
-    // If we change the bill, update the claim amount from the bill's total
     if (name === 'billId' && value) {
       const selectedBill = bills.find(bill => bill._id === value);
       if (selectedBill) {
@@ -186,7 +180,6 @@ const InsuranceClaimForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
     if (!formData.patientId || !formData.billId || !formData.insuranceProvider || !formData.claimAmount) {
       toast.error('Please fill all required fields');
       return;
@@ -195,16 +188,9 @@ const InsuranceClaimForm = () => {
     try {
       setLoading(true);
       
-      // Create data object with proper field names for the server
       const claimData = {
         ...formData,
-        patient: formData.patientId,  // Map patientId to patient field
-        bill: formData.billId,        // Map billId to bill field
       };
-      
-      // Remove original fields to avoid duplicates
-      delete claimData.patientId;
-      delete claimData.billId;
       
       console.log(`${isEditMode ? 'Updating' : 'Submitting'} claim data:`, claimData);
       

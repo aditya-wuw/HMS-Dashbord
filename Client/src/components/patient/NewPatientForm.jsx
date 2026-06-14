@@ -24,7 +24,6 @@ const NewPatientForm = ({ isEditMode = false }) => {
   });
 
   useEffect(() => {
-    // If we're in edit mode, fetch the patient data
     if (isEditMode && id) {
       const fetchPatient = async () => {
         try {
@@ -32,15 +31,13 @@ const NewPatientForm = ({ isEditMode = false }) => {
           const response = await PatientAPI.getPatientById(id);
           const patientData = response.data;
           
-          // Convert any null values to empty strings for the form
           const formattedData = {};
           Object.keys(patientData).forEach(key => {
-            if (formData.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(formData, key)) {
               formattedData[key] = patientData[key] === null ? '' : patientData[key];
             }
           });
 
-          // Set the form data with the patient information
           setFormData({
             ...formData,
             ...formattedData
@@ -48,7 +45,6 @@ const NewPatientForm = ({ isEditMode = false }) => {
         } catch (error) {
           console.error('Error fetching patient details:', error);
           toast.error('Failed to load patient information');
-          // Navigate back to patient list if there's an error
           navigate('/dashboard/patient/records');
         } finally {
           setFetchingPatient(false);
@@ -66,7 +62,6 @@ const NewPatientForm = ({ isEditMode = false }) => {
       [name]: value
     });
     
-    // Clear error for this field when user starts typing
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -115,7 +110,6 @@ const NewPatientForm = ({ isEditMode = false }) => {
     try {
       setLoading(true);
       
-      // Format the data for submission
       const patientData = {
         ...formData
       };

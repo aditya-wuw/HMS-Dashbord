@@ -35,7 +35,6 @@ const AttendanceTracker = ({ standalone = false }) => {
     }
   };
 
-  // Filter the attendance records by status if a filter is selected
   const filteredRecords = filterStatus === 'All' 
     ? attendanceRecords 
     : attendanceRecords.filter(record => record.status === filterStatus);

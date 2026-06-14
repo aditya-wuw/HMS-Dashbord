@@ -1,8 +1,9 @@
+/* @tailwind utilities; */
 @import "tailwindcss";
-@tailwind utilities;
 
 /* Global Styles */
-html, body {
+html,
+body {
   height: 100%;
   overflow-x: hidden;
 }
@@ -15,24 +16,27 @@ body {
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 /* Hide scrollbars but keep functionality */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
   width: 0;
   height: 0;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f1f100;
   border-radius: 4px;
 }
 

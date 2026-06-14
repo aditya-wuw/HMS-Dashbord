@@ -21,7 +21,6 @@ const AdmissionsList = ({ standalone = false }) => {
       setAdmissions(response.data || []);
     } catch (error) {
       console.error('Error fetching admissions:', error);
-      // Only show error toast if it's a server/network error, not for empty data
       if (error.response && error.response.status !== 404) {
         setError('Failed to load admission data. Please try again.');
       }
@@ -55,7 +54,6 @@ const AdmissionsList = ({ standalone = false }) => {
       try {
         await PatientAPI.dischargePatient(id, { dischargeDate: new Date() });
         toast.success('Patient discharged successfully');
-        // Update local state to reflect the change
         setAdmissions(admissions.map(admission => 
           admission._id === id 
             ? { ...admission, status: 'Discharged', dischargeDate: new Date() } 

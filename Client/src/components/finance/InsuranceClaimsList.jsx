@@ -33,7 +33,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
       setClaims(response.data || []);
     } catch (error) {
       console.error('Error fetching insurance claims:', error);
-      // Only show error toast if it's a server/network error, not for empty data
       if (error.response && error.response.status !== 404) {
         toast.error('Error loading insurance claims data');
         setError('Failed to load insurance claims data. Please try again later.');
@@ -71,18 +70,9 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
     }
   };
   
-  const handleViewClaim = (id) => {
-    navigate(`/dashboard/admin/insurance/${id}`);
-  };
-  
   const handleEditClaim = (id) => {
     console.log(`Navigating to edit insurance claim with ID: ${id}`);
     navigate(`/dashboard/admin/insurance/${id}/edit`);
-  };
-  
-  const handleViewDocuments = (claim) => {
-    // In a real application, this would open a document viewer or list of documents
-    toast.info(`Viewing documents for claim #${claim._id}`);
   };
   
   const handleUpdateStatus = async (id, newStatus) => {
@@ -121,7 +111,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
       console.log('Sending update data:', updateData);
       await FinanceAPI.updateClaimStatus(id, updateData);
       
-      // Update the claim in state
       setClaims(claims.map(claim => 
         claim._id === id 
           ? { ...claim, status: newStatus, approvedAmount: approvedAmount !== null ? approvedAmount : claim.approvedAmount } 
@@ -142,7 +131,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
         const response = await FinanceAPI.deleteInsuranceClaim(id);
         console.log('Delete response:', response);
         
-        // Update the UI by removing the deleted claim
         setClaims(claims.filter(claim => claim._id !== id));
         toast.success('Insurance claim deleted successfully');
       } catch (error) {
@@ -162,40 +150,33 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
     
     try {
       
-      // Create a new jsPDF instance
       const doc = new jsPDF();
       const hospitalName = 'Hospital Management System';
       const documentTitle = 'INSURANCE CLAIM';
       const date = new Date().toLocaleDateString();
       
-      // Add hospital name and logo
       doc.setFontSize(20);
       doc.setTextColor(0, 51, 102);
       doc.text(hospitalName, 105, 15, { align: 'center' });
       
-      // Add document title
       doc.setFontSize(24);
       doc.setTextColor(0, 0, 0);
       doc.text(documentTitle, 105, 30, { align: 'center' });
       
-      // Add document details
       doc.setFontSize(11);
       doc.setTextColor(0, 0, 0);
       
-      // Left side - Hospital details
       doc.text('Rekha Hospital', 14, 50);
       doc.text('123 Medical Center Road', 14, 55);
       doc.text('Healthcare City, HC 12345', 14, 60);
       doc.text('Phone: (123) 456-7890', 14, 65);
       doc.text('Email: Rekha@hms.com', 14, 70);
       
-      // Right side - Claim details
       doc.text(`Claim ID: #${claim._id?.substring(0, 8) || '00000000'}`, 140, 50);
       doc.text(`Date: ${date}`, 140, 55);
       doc.text(`Submission Date: ${new Date(claim.submissionDate || Date.now()).toLocaleDateString()}`, 140, 60);
       doc.text(`Status: ${claim.status || 'Submitted'}`, 140, 65);
       
-      // Patient information
       doc.setFillColor(240, 240, 240);
       doc.rect(14, 80, 182, 25, 'F');
       doc.setFontSize(12);
@@ -207,7 +188,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
       doc.text(`Patient: ${patientName}`, 14, 95);
       doc.text(`Patient ID: ${claim.patient?._id || 'Unknown'}`, 14, 100);
       
-      // Insurance information
       doc.setFillColor(240, 240, 240);
       doc.rect(14, 110, 182, 30, 'F');
       doc.setFontSize(12);
@@ -220,12 +200,10 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
       doc.text(`Insurance Contact: ${claim.insuranceContact || 'N/A'}`, 120, 125);
       doc.text(`Group Number: ${claim.groupNumber || 'N/A'}`, 120, 130);
       
-      // Claim details
       doc.setFontSize(14);
       doc.setTextColor(0, 51, 102);
       doc.text('Claim Details', 14, 150);
       
-      // Prepare claim details
       const claimItems = [
         ['Treatment/Service', claim.serviceDescription || 'Medical Service'],
         ['Diagnosis Code', claim.diagnosisCode || 'N/A'],
@@ -238,7 +216,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
         claimItems.push(['Approved Amount', `₹${parseFloat(claim.approvedAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]);
       }
       
-      // Add claim details table
       autoTable(doc, {
         startY: 155,
         head: [['Item', 'Details']],
@@ -253,14 +230,12 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
         }
       });
       
-      // Status information
       const finalY = doc.lastAutoTable.finalY || 200;
       
       doc.setFontSize(14);
       doc.setTextColor(0, 51, 102);
       doc.text('Current Status', 14, finalY + 20);
       
-      // Status details
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
       
@@ -295,7 +270,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
         doc.text(splitComments, 14, finalY + 50);
       }
       
-      // Declaration
       const declarationY = claim.comments ? finalY + 70 : finalY + 50;
       doc.setFillColor(240, 240, 240);
       doc.rect(14, declarationY, 182, 30, 'F');
@@ -308,7 +282,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
       const splitDeclaration = doc.splitTextToSize(declaration, 170);
       doc.text(splitDeclaration, 14, declarationY + 20);
       
-      // Add footer
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -318,7 +291,6 @@ const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTr
         doc.text('© Rekha Hospital', 105, doc.internal.pageSize.height - 5, { align: 'center' });
       }
       
-      // Save the PDF
       doc.save(`Insurance_Claim_${claim._id?.substring(0, 8) || '00000000'}.pdf`);
       
       toast.success('Claim document downloaded successfully!');

@@ -1,114 +1,158 @@
-import Staff from '../models/Staff.js';
-import Appointment from '../models/Appointment.js';
+import { query } from '../db/index.js';
 
-// Get all staff
 export const getAllStaff = async (req, res) => {
   try {
-    const staff = await Staff.find({});
-    res.json(staff);
+    const { rows } = await query(`
+      SELECT id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+             joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM staff
+    `);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get staff by department
 export const getStaffByDepartment = async (req, res) => {
   try {
-    const staff = await Staff.find({ department: req.params.department });
-    res.json(staff);
+    const { rows } = await query(`
+      SELECT id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+             joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM staff
+      WHERE department = $1
+    `, [req.params.department]);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get staff by role
 export const getStaffByRole = async (req, res) => {
   try {
-    const staff = await Staff.find({ role: req.params.role });
-    res.json(staff);
+    const { rows } = await query(`
+      SELECT id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+             joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM staff
+      WHERE role = $1
+    `, [req.params.role]);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get a single staff member
 export const getStaffById = async (req, res) => {
   try {
-    const staff = await Staff.findById(req.params.id);
-    if (!staff) {
+    const { rows } = await query(`
+      SELECT id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+             joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM staff
+      WHERE id = $1
+    `, [req.params.id]);
+    if (rows.length === 0) {
       return res.status(404).json({ message: 'Staff not found' });
     }
-    res.json(staff);
+    res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Create a new staff member
 export const createStaff = async (req, res) => {
   try {
-    const staff = new Staff(req.body);
-    const createdStaff = await staff.save();
-    res.status(201).json(createdStaff);
+    const { name, staffId, role, department, contactNumber, email, joiningDate, qualification, schedule } = req.body;
+    const { rows } = await query(`
+      INSERT INTO staff (name, staff_id, role, department, contact_number, email, joining_date, qualification, schedule)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+                joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+    `, [name, staffId, role, department, contactNumber, email, joiningDate || new Date(), qualification, JSON.stringify(schedule || [])]);
+    res.status(201).json(rows[0]);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-// Update a staff member
 export const updateStaff = async (req, res) => {
   try {
-    const staff = await Staff.findById(req.params.id);
-    if (!staff) {
+    const fields = {
+      name: req.body.name,
+      staff_id: req.body.staffId,
+      role: req.body.role,
+      department: req.body.department,
+      contact_number: req.body.contactNumber,
+      email: req.body.email,
+      joining_date: req.body.joiningDate,
+      qualification: req.body.qualification,
+      schedule: req.body.schedule ? JSON.stringify(req.body.schedule) : undefined
+    };
+
+    const setClause = [];
+    const values = [];
+    let index = 1;
+    for (const [key, val] of Object.entries(fields)) {
+      if (val !== undefined) {
+        setClause.push(`${key} = $${index}`);
+        values.push(val);
+        index++;
+      }
+    }
+    if (setClause.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+    values.push(req.params.id);
+
+    const { rows } = await query(`
+      UPDATE staff SET ${setClause.join(', ')}
+      WHERE id = $${index}
+      RETURNING id, name, staff_id AS "staffId", role, department, contact_number AS "contactNumber", email,
+                joining_date AS "joiningDate", qualification, schedule, created_at AS "createdAt", updated_at AS "updatedAt"
+    `, values);
+    if (rows.length === 0) {
       return res.status(404).json({ message: 'Staff not found' });
     }
-    
-    Object.assign(staff, req.body);
-    const updatedStaff = await staff.save();
-    res.json(updatedStaff);
+    res.json(rows[0]);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-// Delete a staff member
 export const deleteStaff = async (req, res) => {
   try {
-    const staff = await Staff.findById(req.params.id);
-    if (!staff) {
+    const { rowCount } = await query('DELETE FROM staff WHERE id = $1', [req.params.id]);
+    if (rowCount === 0) {
       return res.status(404).json({ message: 'Staff not found' });
     }
-    
-    await Staff.deleteOne({ _id: req.params.id });
     res.json({ message: 'Staff removed' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get doctor's appointments
 export const getDoctorAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find({ doctor: req.params.id })
-      .populate('patient', 'name age gender contactNumber')
-      .sort({ date: -1 });
-    
-    res.json(appointments);
+    const { rows } = await query(`
+      SELECT ap.id, ap.date, ap.time, ap.status, ap.purpose, ap.notes, ap.created_at AS "createdAt", ap.updated_at AS "updatedAt",
+             json_build_object('id', p.id, 'name', p.name, 'age', p.age, 'gender', p.gender, 'contactNumber', p.contact_number) AS patient
+      FROM appointments ap
+      JOIN patients p ON ap.patient_id = p.id
+      WHERE ap.doctor_id = $1
+      ORDER BY ap.date DESC
+    `, [req.params.id]);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get staff schedule
 export const getStaffSchedule = async (req, res) => {
   try {
-    const staff = await Staff.findById(req.params.id);
-    if (!staff) {
+    const { rows } = await query('SELECT schedule FROM staff WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) {
       return res.status(404).json({ message: 'Staff not found' });
     }
-    
-    res.json(staff.schedule);
+    res.json(rows[0].schedule);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}; 
+};

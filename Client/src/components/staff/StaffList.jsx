@@ -22,7 +22,6 @@ const StaffList = ({ standalone = false }) => {
       setStaff(response.data || []);
     } catch (error) {
       console.error('Error fetching staff:', error);
-      // Only show error toast if it's a server/network error, not for empty data
       if (error.response && error.response.status !== 404) {
         toast.error('Error loading staff members');
         setError('Failed to load staff data. Please try again later.');
@@ -49,7 +48,6 @@ const StaffList = ({ standalone = false }) => {
     return matchesSearch && matchesRole && matchesDepartment;
   }) : [];
   
-  // Get unique roles and departments for filter options
   const uniqueRoles = staff && staff.length ? Array.from(new Set(staff.map(member => member.role).filter(Boolean))) : [];
   const uniqueDepartments = staff && staff.length ? Array.from(new Set(staff.map(member => member.department).filter(Boolean))) : [];
   
@@ -68,14 +66,6 @@ const StaffList = ({ standalone = false }) => {
 
   const handleEdit = (id) => {
     navigate(`/dashboard/doctor/edit/${id}`);
-  };
-
-  const handleView = (id) => {
-    navigate(`/dashboard/doctor/view/${id}`);
-  };
-
-  const handleSchedule = (id) => {
-    navigate(`/dashboard/doctor/schedule/${id}`);
   };
 
   const component = (

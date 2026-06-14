@@ -13,8 +13,6 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { refreshTrigger, refreshData } = useAppContext();
-  const [staff, setStaff] = useState([]);
-  const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(initialActiveTab);
@@ -24,9 +22,7 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
     shiftsCount: 3 // Default value
   });
 
-  // Set active tab based on URL
   useEffect(() => {
-    // Extract path without the leading slash
     const path = location.pathname.substring(1).split('/');
     
     if (path.length > 2) {
@@ -46,16 +42,12 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
       setLoading(true);
       const response = await StaffAPI.getAllStaff();
       console.log('Staff API response:', response);
-      // Check if we have valid data
       if (!response || !response.data) {
         console.warn('Invalid staff data response:', response);
         return;
       }
-      // Ensure we have an array
       const staffData = Array.isArray(response.data) ? response.data : [];
-      setStaff(staffData);
       
-      // Update stats with staff count
       setStats(prevStats => ({
         ...prevStats,
         totalStaff: staffData.length
@@ -79,12 +71,9 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
       const response = await StaffAPI.getAttendanceByDate(today);
       
       const attendanceData = Array.isArray(response.data) ? response.data : [];
-      setAttendance(attendanceData);
       
-      // Calculate present today
       const presentToday = attendanceData.filter(a => a.status === 'Present').length;
       
-      // Update stats with attendance count
       setStats(prevStats => ({
         ...prevStats,
         presentToday: presentToday
@@ -102,19 +91,15 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
     }
   };
 
-  // Main data fetching function
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Fetch staff data first
       await fetchStaffData();
       
-      // Then fetch attendance data
       await fetchAttendanceData();
       
-      // Show toast notification when data is refreshed, but only if not the initial load
       if (!loading) {
         toast.info('Staff dashboard data refreshed', { 
           autoClose: 2000, 
@@ -131,19 +116,16 @@ const StaffDashboard = ({ activeTab: initialActiveTab = 'staff' }) => {
     }
   };
   
-  // Initial data load
   useEffect(() => {
     fetchDashboardData();
   }, []);
   
-  // Refresh data when refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchDashboardData();
     }
   }, [refreshTrigger]);
 
-  // Placeholder for Medical Records component
   const MedicalRecords = () => (
     <div className="p-6">
       <h2 className="text-xl font-semibold mb-4">Medical Records</h2>

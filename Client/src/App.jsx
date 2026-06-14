@@ -8,7 +8,6 @@ import StaffDashboard from './components/staff/StaffDashboard'
 import FinanceDashboard from './components/finance/FinanceDashboard'
 import { AppProvider, useAppContext } from './context/AppContext'
 
-// Detailed components for each section
 import PatientList from './components/patient/PatientList'
 import AppointmentList from './components/patient/AppointmentList'
 import NewPatientForm from './components/patient/NewPatientForm'
@@ -25,32 +24,49 @@ import BillingList from './components/finance/BillingList'
 import InsuranceClaimsList from './components/finance/InsuranceClaimsList'
 import NewBillForm from './components/finance/NewBillForm'
 import NewInsuranceClaimForm from './components/finance/NewInsuranceClaimForm'
+import LandingPage from './components/LandingPage'
+import Login from './components/Login'
+import Signup from './components/Signup'
 
-// Protected route component
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const { userRole } = useAppContext();
-  
-  if (!userRole) {
-    return <Navigate to="/" replace />;
+  const { isAuthenticated, user, userRole } = useAppContext();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
-  
+
+  if (user?.role === 'admin') {
+    return children;
+  }
+
   if (requiredRole && userRole !== requiredRole) {
     return <Navigate to={`/dashboard/${userRole.toLowerCase()}`} replace />;
   }
-  
+
   return children;
 };
 
 function AppRoutes() {
-  const { userRole } = useAppContext();
+  const { isAuthenticated, user, userRole } = useAppContext();
 
   return (
     <Routes>
       <Route path="/" element={
-        userRole ? <Navigate to={`/dashboard/${userRole.toLowerCase()}`} /> : 
-        <DashboardSelection />
+        <LandingPage />
       } />
-      
+      <Route path="/login" element={
+        <Login />
+      } />
+      <Route path="/signup" element={
+        <Signup />
+      } />
+      <Route path="/dashboard" element={
+        isAuthenticated ? (
+          user?.role === 'admin' ? <DashboardSelection /> : <Navigate to={`/dashboard/${userRole.toLowerCase()}`} replace />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
       {/* Patient Dashboard Routes */}
       <Route path="/dashboard/patient" element={
         <ProtectedRoute requiredRole="patient">
@@ -102,7 +118,7 @@ function AppRoutes() {
           <NewAdmissionForm isEditMode={true} />
         </ProtectedRoute>
       } />
-      
+
       {/* Staff Dashboard Routes */}
       <Route path="/dashboard/doctor" element={
         <ProtectedRoute requiredRole="doctor">
@@ -139,7 +155,7 @@ function AppRoutes() {
           <NewStaffForm isEditMode={true} />
         </ProtectedRoute>
       } />
-      
+
       {/* Finance Dashboard Routes */}
       <Route path="/dashboard/admin" element={
         <ProtectedRoute requiredRole="admin">

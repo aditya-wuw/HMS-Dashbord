@@ -35,7 +35,6 @@ const PatientDashboard = ({ activeTab: initialActiveTab = 'patients' }) => {
         PatientAPI.getAllAdmissions()
       ]);
       
-      // Store appointments data for the calendar
       setAppointments(appointmentsRes.data || []);
       
       setStats({
@@ -45,7 +44,6 @@ const PatientDashboard = ({ activeTab: initialActiveTab = 'patients' }) => {
         totalResults: patientsRes.data ? patientsRes.data.length+1 : 0,
       });
       
-      // Show toast notification when data is refreshed, but only if not the initial load
       if (!loading) {
         toast.info('Dashboard data refreshed', { 
           autoClose: 2000, 
@@ -64,12 +62,10 @@ const PatientDashboard = ({ activeTab: initialActiveTab = 'patients' }) => {
     }
   };
 
-  // Initial data load
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Refresh data when refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchData();

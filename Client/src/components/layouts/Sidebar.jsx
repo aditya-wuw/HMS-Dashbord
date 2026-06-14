@@ -9,9 +9,7 @@ import { useAppContext } from '../../context/AppContext';
 import { IoMdClose } from "react-icons/io";
 const Sidebar = ({ dashboardType }) => {
   const location = useLocation();
-  const { handleLogout } = useAppContext();
-  const { sideBar, setSideBar } = useAppContext();
-  // Define navigation items based on dashboard type
+  const { user, handleLogout, sideBar, setSideBar } = useAppContext();
   let navItems = [];
   
   if (dashboardType === 'patient') {
@@ -40,7 +38,6 @@ const Sidebar = ({ dashboardType }) => {
     ];
   }
 
-  // Get the dashboard title
   const getDashboardTitle = () => {
     if (dashboardType === 'admin') {
       return 'Finance Dashboard';
@@ -78,13 +75,22 @@ const Sidebar = ({ dashboardType }) => {
         </ul>
       </nav>
       <div className="p-4 mt-auto bg-blue-500/20">
-        <Link 
-          to="/" 
-          onClick={handleLogout}
-          className="text-white/80 hover:text-white flex items-center bg-blue-700 p-2 rounded-md w-full"
-        >
-          <FaSignOutAlt className="mr-2" /> Change Dashboard
-        </Link>
+        {user?.role === 'admin' ? (
+          <Link 
+            to="/dashboard" 
+            className="text-white/80 hover:text-white flex items-center bg-blue-700 p-2 rounded-md w-full"
+          >
+            <FaSignOutAlt className="mr-2" /> Change Dashboard
+          </Link>
+        ) : (
+          <Link 
+            to="/" 
+            onClick={handleLogout}
+            className="text-white/80 hover:text-white flex items-center bg-blue-700 p-2 rounded-md w-full"
+          >
+            <FaSignOutAlt className="mr-2" /> Sign Out
+          </Link>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import { FaTimes } from 'react-icons/fa';
 
 const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
   useEffect(() => {
-    // Prevent body scroll when modal is open
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -17,7 +16,6 @@ const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
   
   if (!isOpen) return null;
   
-  // Determine modal width based on size prop
   let modalWidth;
   switch (size) {
     case 'small':

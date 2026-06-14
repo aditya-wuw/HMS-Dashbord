@@ -4,7 +4,6 @@ export const getAllAttendance = async (req, res) => {
       .populate('staffId', 'name department role')
       .sort({ date: -1 });
     
-    // Transform the data to match the expected format in the frontend
     const formattedAttendance = attendance.map(record => ({
       _id: record._id,
       staff: {

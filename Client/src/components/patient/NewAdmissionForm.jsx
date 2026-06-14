@@ -27,7 +27,6 @@ const NewAdmissionForm = ({ isEditMode = false }) => {
     status: 'Admitted'
   });
 
-  // Fetch doctors and patients for select dropdowns
   useEffect(() => {
     const fetchSelectData = async () => {
       try {
@@ -53,7 +52,6 @@ const NewAdmissionForm = ({ isEditMode = false }) => {
     fetchSelectData();
   }, []);
 
-  // If in edit mode, fetch the admission data
   useEffect(() => {
     if (isEditMode && id) {
       const fetchAdmission = async () => {
@@ -92,7 +90,6 @@ const NewAdmissionForm = ({ isEditMode = false }) => {
       [name]: value
     });
     
-    // Clear error for this field when user starts typing
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,

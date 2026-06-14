@@ -58,7 +58,6 @@ const NewStaffForm = () => {
     }
   };
 
-  // Get today's date in YYYY-MM-DD format for default joining date
   const today = new Date().toISOString().split('T')[0];
 
   return (

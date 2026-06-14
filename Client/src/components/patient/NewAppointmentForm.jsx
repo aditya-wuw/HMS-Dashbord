@@ -38,7 +38,6 @@ const NewAppointmentForm = () => {
         setDoctors(doctorsRes.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Only show error toast if it's a server/network error, not for empty data
         if (error.response && error.response.status !== 404) {
           toast.error('Error loading doctors and patients');
           setError('Failed to load doctors and patients data. Please try again later.');
@@ -58,7 +57,6 @@ const NewAppointmentForm = () => {
       [name]: value
     });
     
-    // Clear error for this field when user starts typing
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -120,7 +118,6 @@ const NewAppointmentForm = () => {
       if (error.response) {
         console.log("Error response:", error.response);
         
-        // Check if the server returned a message
         if (error.response.data && error.response.data.message) {
           errorMessage = error.response.data.message;
         } else if (error.response.status === 404) {
@@ -136,7 +133,6 @@ const NewAppointmentForm = () => {
     }
   };
 
-  // Get tomorrow's date in YYYY-MM-DD format for min date
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
@@ -294,7 +290,6 @@ const NewAppointmentForm = () => {
             
             {/* Notes */}
         
-            
             <div className="mt-8 flex justify-end">
               <button
                 type="button"
